@@ -1,5 +1,10 @@
 # Webapi_mvc_Admin
-Standalone webapi created in Visual Studio 2022 For Authentication and Authorization using jwt token
+Standalone webapi created For Authentication and Authorization using jwt token.
+<h4>Requirements</h4>
+1. SqlServer 2019 </br>
+2. Visual studio 2022 prefferd
+
+<strong>Change data source in Web.config (line 12) "LAPTOP-NAIGAH36\SQLEXPRESS" with yours</strong>
 
 <h4>Create new role</h4> 
 1. Start debuging </br>
