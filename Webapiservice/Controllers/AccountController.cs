@@ -16,6 +16,10 @@ using Microsoft.Owin.Security.OAuth;
 using Webapiservice.Models;
 using Webapiservice.Providers;
 using Webapiservice.Results;
+using System.Text;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Configuration;
 
 namespace Webapiservice.Controllers
 {
@@ -318,6 +322,46 @@ namespace Webapiservice.Controllers
             return logins;
         }
 
+        [AllowAnonymous]
+        [HttpPost]
+        [Route("Login")]
+        public IHttpActionResult Login(LoginBindingModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                var user = UserManager.FindByName(model.UserName);
+                var result = UserManager.CheckPassword(user, model.Password);
+                var role = UserManager.GetRoles(user.Id)[0]; //get first role assigned to user
+                //return Ok($"{user.UserName} found and had role {role}");
+                var secret = ConfigurationManager.AppSettings["secret"]; //create jwt token for autorization
+
+                var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
+                var authClaims = new List<Claim>
+                {
+                    new Claim(ClaimTypes.Name,model.UserName),
+                    new Claim(ClaimTypes.Role,role),
+                };
+                //token creation
+                var token = new JwtSecurityToken(
+                    expires: DateTime.Now.AddHours(3),
+                    claims: authClaims,
+                    signingCredentials: new SigningCredentials(authSigningKey,SecurityAlgorithms.HmacSha256)
+                    );
+
+                if (result)
+                {
+                    return Ok(new
+                    {
+                        token = new JwtSecurityTokenHandler().WriteToken(token),
+                        expiration = token.ValidTo,
+                        username = model.UserName,  
+                        Role = role
+                    });
+                }  
+            }
+            return Unauthorized();
+        }
+
         // POST api/Account/Register
         [AllowAnonymous]
         [Route("Register")]
@@ -332,8 +376,8 @@ namespace Webapiservice.Controllers
 
             IdentityResult result = await UserManager.CreateAsync(user, model.Password);
             //For assign role to user
-            UserManager.AddToRole(user.Id, "Admin"); //For creating admin login
-            //UserManager.AddToRole(user.Id, "User"); //For creating Users
+            //UserManager.AddToRole(user.Id, "Admin"); //For creating admin login
+            UserManager.AddToRole(user.Id, "User"); //For creating Users
             if (!result.Succeeded)
             {
                 return GetErrorResult(result);
