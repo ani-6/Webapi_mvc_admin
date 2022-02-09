@@ -9,6 +9,7 @@ Standalone webapi created in Visual Studio 2022 For Authentication and Authoriza
 4. For creating admin role put </br>
 "Admin" </br>
 5. Send </br></br>
+6. Create "User" as well because its default registration role.
 
 To check role created and users assgned to that role </br>
 Method - GET 
@@ -34,7 +35,7 @@ Controller->Accountcontroller.cs->public async Task<IHttpActionResult> Register(
 2. Method - POST 
     Url - https://localhost:44310/api/Account/register </br>
 3. select x-www-form-urlencode </br>
-4. put all required values as key and value </br>
+4. put all required values as key and value (username,name,email,password,confirmpassword) </br>
     eg  key - username value - admin </br>
 
 To crate user as per various roles AccountController.cs->Register </br>
