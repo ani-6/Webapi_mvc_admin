@@ -23,7 +23,7 @@ using System.Configuration;
 
 namespace Webapiservice.Controllers
 {
-    [Authorize]
+    //[Authorize]
     [RoutePrefix("api/Account")]
     public class AccountController : ApiController
     {
@@ -122,20 +122,26 @@ namespace Webapiservice.Controllers
         [Route("ChangePassword")]
         public async Task<IHttpActionResult> ChangePassword(ChangePasswordBindingModel model)
         {
-            if (!ModelState.IsValid)
+            var username = TokenManager.CheckHeader();
+            if (username != null)
             {
-                return BadRequest(ModelState);
-            }
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+                var user = UserManager.FindByName(username);
+                var userId = user.Id;
+                var result = await UserManager.ChangePasswordAsync(userId, model.OldPassword,
+                    model.NewPassword);
 
-            IdentityResult result = await UserManager.ChangePasswordAsync(User.Identity.GetUserId(), model.OldPassword,
-                model.NewPassword);
-            
-            if (!result.Succeeded)
-            {
-                return GetErrorResult(result);
-            }
+                if (!result.Succeeded)
+                {
+                    return GetErrorResult(result);
+                }
 
-            return Ok();
+                return Ok();
+            }
+            return Unauthorized();
         }
 
         // POST api/Account/SetPassword
@@ -340,6 +346,7 @@ namespace Webapiservice.Controllers
                 {
                     new Claim(ClaimTypes.Name,model.UserName),
                     new Claim(ClaimTypes.Role,role),
+                    
                 };
                 //token creation
                 var token = new JwtSecurityToken(
